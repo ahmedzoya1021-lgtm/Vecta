@@ -1,0 +1,4 @@
+.env
+vecta.db
+__pycache__/
+*.pyc

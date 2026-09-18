@@ -1,0 +1,259 @@
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --border: #2a2e38;
+  --text: #e6e8eb;
+  --muted: #8b8f99;
+  --green: #3ecf8e;
+  --red: #f16063;
+  --accent: #6c8cff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  padding: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.account {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.account a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.auth-main {
+  max-width: 380px;
+  margin: 4rem auto;
+  padding: 0 1rem;
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth-card input {
+  width: 100%;
+}
+
+.auth-switch {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 0;
+}
+
+.auth-switch a {
+  color: var(--accent);
+}
+
+.error {
+  background: rgba(241, 96, 99, 0.12);
+  color: var(--red);
+  border: 1px solid var(--red);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin: 0.25rem 0 0;
+}
+
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary {
+  display: flex;
+  gap: 2rem;
+}
+
+.stat .label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.stat .value {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.positive { color: var(--green); }
+.negative { color: var(--red); }
+
+#add-form {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+input, button {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+input { flex: 1; min-width: 140px; }
+
+button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover { opacity: 0.9; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.6rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+th { color: var(--muted); font-weight: 500; }
+
+.delete-btn {
+  background: transparent;
+  color: var(--red);
+  font-weight: normal;
+  padding: 0.3rem 0.6rem;
+}
+
+.insight-row td {
+  background: #12151b;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  border-bottom: 1px solid var(--border);
+}
+
+.insight-toggle {
+  background: transparent;
+  color: var(--accent);
+  font-weight: normal;
+  padding: 0.3rem 0.6rem;
+}
+
+.sources {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.sources a {
+  color: var(--accent);
+  margin-right: 0.75rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.edit-input {
+  width: 70px;
+  padding: 0.3rem 0.4rem;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.save-btn {
+  background: var(--green);
+  color: #0f1115;
+  font-weight: 600;
+  padding: 0.3rem 0.6rem;
+}
+
+.cancel-btn {
+  background: transparent;
+  color: var(--muted);
+  font-weight: normal;
+  padding: 0.3rem 0.6rem;
+}
+
+.edit-btn {
+  background: transparent;
+  color: var(--text);
+  font-weight: normal;
+  padding: 0.3rem 0.6rem;
+  border-color: var(--border);
+}
+
+.briefing-hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: -0.5rem;
+}
+
+#briefing-result {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+#briefing-result:empty {
+  margin-top: 0;
+}
