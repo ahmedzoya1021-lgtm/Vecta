@@ -59,9 +59,18 @@ def get_geopolitical_context(symbol, company_name=None):
         return _no_key_response()
 
     name = company_name or symbol
-    prompt = f"""Search for current news (last 1-2 weeks) relevant to {name} (ticker: {symbol})
-that a retail investor would want context on: geopolitical events, trade/regulatory
-actions, supply chain news, or major company-specific developments.
+    prompt = f"""Search for current news (last 1-2 weeks) relevant to {name} (ticker: {symbol}).
+
+Vecta is a GEOPOLITICS-focused app — that is the lens to prioritize. Search first for
+geopolitical/international angles: trade policy, tariffs, sanctions, export controls, wars,
+elections, diplomatic tensions, or regulatory action by a foreign government — anything tying
+this company to international politics or a specific country's actions.
+
+Only if there is genuinely no notable geopolitical angle in what you find, fall back to the
+next most relevant current-events context (major company news, industry trend, domestic
+regulatory action). Do not force a geopolitical angle that isn't really there — if the
+honest answer is "nothing geopolitical, but here's what else is relevant," say that instead
+of stretching to make something sound geopolitical.
 
 Rules:
 - Do exactly ONE search, then answer from those results. Do not search again even if the
@@ -69,14 +78,15 @@ Rules:
 - Base the summary on what you actually find via search, not general knowledge.
 - Do NOT tell the reader to buy, sell, or hold. Present information only, not a recommendation.
 - If search turns up nothing notable and recent, say so plainly instead of padding with generic background.
-- Your final message must contain ONLY the summary itself: 2-3 sentences, plain English,
-  no jargon, no markdown formatting, no headers, no meta-commentary about your process or
-  the search results, no preamble like "Based on the search results" or "Here's what I found."
-  Just the 2-3 sentences a reader would see."""
+- Your final message must contain ONLY the summary itself: STRICTLY under 60 words, plain
+  English, no jargon, no markdown formatting, no headers, no meta-commentary about your
+  process or the search results, no preamble like "Based on the search results" or "Here's
+  what I found." Just the sentences a reader would see. Staying under the word limit matters
+  more than covering every detail — pick the single most important point and cut the rest."""
 
     message = client.messages.create(
         model="claude-sonnet-5",
-        max_tokens=1024,
+        max_tokens=2048,
         tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 1}],
         messages=[{"role": "user", "content": prompt}],
     )
@@ -99,10 +109,18 @@ def get_portfolio_briefing(holdings):
 {holdings_list}
 
 Search for current news relevant to this SPECIFIC combination of holdings — not
-each stock in isolation. Look especially for:
-- Concentration risk (e.g. multiple holdings in the same sector or supply chain)
-- A current event or trend that affects several of these holdings at once
-- Any single holding that dominates the portfolio and carries outsized risk
+each stock in isolation.
+
+Vecta is a GEOPOLITICS-focused app — that is the lens to prioritize. Look first for a
+geopolitical/international connection across these holdings: shared exposure to the same
+country (e.g. trade policy, tariffs, sanctions, export controls affecting several of them),
+a war or diplomatic event touching multiple holdings, or a foreign regulatory action that
+hits more than one of them at once.
+
+Only if there is genuinely no notable geopolitical connection, fall back to the next most
+relevant cross-holding risk — e.g. concentration in the same sector or business relationship,
+or a single holding that dominates the portfolio. Do not force a geopolitical angle that
+isn't really there.
 
 Rules:
 - Do exactly ONE search covering the whole portfolio (e.g. search for the tickers together,
@@ -110,13 +128,15 @@ Rules:
   search again even if the results feel incomplete — summarize what you got.
 - Do NOT tell the reader to buy, sell, or hold, or to rebalance. Present information only.
 - If nothing notable connects these holdings beyond the obvious, say so plainly.
-- Your final message must contain ONLY the summary itself: 3-5 sentences, plain English,
-  no jargon, no markdown formatting, no headers, no meta-commentary about your process,
-  no preamble like "Based on the search results." Just the sentences a reader would see."""
+- Your final message must contain ONLY the summary itself: STRICTLY under 100 words,
+  plain English, no jargon, no markdown formatting, no headers, no meta-commentary about
+  your process, no preamble like "Based on the search results." Just the sentences a
+  reader would see. Staying under the word limit matters more than covering every detail
+  you found — pick the single most important point and cut the rest."""
 
     message = client.messages.create(
         model="claude-sonnet-5",
-        max_tokens=1536,
+        max_tokens=4096,
         tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 1}],
         messages=[{"role": "user", "content": prompt}],
     )
