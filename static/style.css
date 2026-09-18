@@ -102,26 +102,6 @@ section {
   margin-bottom: 1.5rem;
 }
 
-.summary {
-  display: flex;
-  gap: 2rem;
-}
-
-.stat .label {
-  display: block;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.stat .value {
-  display: block;
-  font-size: 1.6rem;
-  font-weight: 600;
-}
-
-.positive { color: var(--green); }
-.negative { color: var(--red); }
-
 #add-form {
   display: flex;
   gap: 0.75rem;
@@ -210,36 +190,9 @@ th { color: var(--muted); font-weight: 500; }
   to { transform: rotate(360deg); }
 }
 
-.edit-input {
-  width: 70px;
-  padding: 0.3rem 0.4rem;
-}
-
 .row-actions {
   display: flex;
   gap: 0.4rem;
-}
-
-.save-btn {
-  background: var(--green);
-  color: #0f1115;
-  font-weight: 600;
-  padding: 0.3rem 0.6rem;
-}
-
-.cancel-btn {
-  background: transparent;
-  color: var(--muted);
-  font-weight: normal;
-  padding: 0.3rem 0.6rem;
-}
-
-.edit-btn {
-  background: transparent;
-  color: var(--text);
-  font-weight: normal;
-  padding: 0.3rem 0.6rem;
-  border-color: var(--border);
 }
 
 .briefing-hint {

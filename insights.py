@@ -94,40 +94,37 @@ Rules:
     return {"available": True, "summary": summary, "sources": sources}
 
 
-def get_portfolio_briefing(holdings):
-    """holdings: list of {symbol, weight_pct} — weight_pct is what share of
-    the total portfolio value that holding represents, e.g. 42.5."""
+def get_watchlist_briefing(symbols):
+    """symbols: list of ticker strings, e.g. ["MSFT", "NVDA"]."""
     client = _get_client()
     if client is None:
         return _no_key_response()
 
-    holdings_list = "\n".join(
-        f"- {h['symbol']}: {h['weight_pct']:.0f}% of portfolio" for h in holdings
-    )
+    watchlist_list = "\n".join(f"- {s}" for s in symbols)
 
-    prompt = f"""A retail investor holds this portfolio:
-{holdings_list}
+    prompt = f"""A user is watching this list of companies (no dollar amounts — just tickers
+they're interested in, for geopolitical context, not a real financial portfolio):
+{watchlist_list}
 
-Search for current news relevant to this SPECIFIC combination of holdings — not
-each stock in isolation.
+Search for current news relevant to this SPECIFIC combination of companies — not
+each one in isolation.
 
 Vecta is a GEOPOLITICS-focused app — that is the lens to prioritize. Look first for a
-geopolitical/international connection across these holdings: shared exposure to the same
+geopolitical/international connection across these companies: shared exposure to the same
 country (e.g. trade policy, tariffs, sanctions, export controls affecting several of them),
-a war or diplomatic event touching multiple holdings, or a foreign regulatory action that
-hits more than one of them at once.
+a war or diplomatic event touching multiple of them, or a foreign regulatory action that
+hits more than one at once.
 
 Only if there is genuinely no notable geopolitical connection, fall back to the next most
-relevant cross-holding risk — e.g. concentration in the same sector or business relationship,
-or a single holding that dominates the portfolio. Do not force a geopolitical angle that
-isn't really there.
+relevant shared risk — e.g. concentration in the same sector or business relationship. Do
+not force a geopolitical angle that isn't really there.
 
 Rules:
-- Do exactly ONE search covering the whole portfolio (e.g. search for the tickers together,
+- Do exactly ONE search covering the whole list (e.g. search for the tickers together,
   or for the shared theme you suspect connects them), then answer from those results. Do not
   search again even if the results feel incomplete — summarize what you got.
 - Do NOT tell the reader to buy, sell, or hold, or to rebalance. Present information only.
-- If nothing notable connects these holdings beyond the obvious, say so plainly.
+- If nothing notable connects these companies beyond the obvious, say so plainly.
 - Your final message must contain ONLY the summary itself: STRICTLY under 100 words,
   plain English, no jargon, no markdown formatting, no headers, no meta-commentary about
   your process, no preamble like "Based on the search results." Just the sentences a

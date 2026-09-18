@@ -1,35 +1,20 @@
 """
-Reads and writes holdings for a specific user, via the database.
+Reads and writes a specific user's watchlist, via the database.
 """
-from models import Holding, db
+from models import WatchlistItem, db
 
 
-def list_holdings(user):
-    return [h.to_dict() for h in user.holdings]
+def list_watchlist(user):
+    return [item.to_dict() for item in user.watchlist]
 
 
-def add_holding(user, symbol, shares, cost_basis):
-    holding = Holding(
-        user_id=user.id,
-        symbol=symbol.upper().strip(),
-        shares=float(shares),
-        cost_basis=float(cost_basis),
-    )
-    db.session.add(holding)
+def add_to_watchlist(user, symbol):
+    item = WatchlistItem(user_id=user.id, symbol=symbol.upper().strip())
+    db.session.add(item)
     db.session.commit()
-    return holding.to_dict()
+    return item.to_dict()
 
 
-def update_holding(user, holding_id, shares, cost_basis):
-    holding = Holding.query.filter_by(id=holding_id, user_id=user.id).first()
-    if holding is None:
-        return None
-    holding.shares = float(shares)
-    holding.cost_basis = float(cost_basis)
-    db.session.commit()
-    return holding.to_dict()
-
-
-def delete_holding(user, holding_id):
-    Holding.query.filter_by(id=holding_id, user_id=user.id).delete()
+def remove_from_watchlist(user, item_id):
+    WatchlistItem.query.filter_by(id=item_id, user_id=user.id).delete()
     db.session.commit()

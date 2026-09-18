@@ -1,5 +1,7 @@
 """
-Vecta — Stage 3.
+Vecta — a watchlist with AI-generated geopolitical context, not a portfolio
+tracker. We deliberately don't track shares or cost basis: other apps
+already do P&L tracking well, and that's not the point here.
 
 Run it with: python app.py
 Then open http://localhost:5000 in your browser.
@@ -15,7 +17,7 @@ from flask_login import LoginManager, current_user, login_required
 import insights
 import storage
 from auth import auth_bp
-from models import InsightCache, PortfolioInsight, PriceCache, User, db, utcnow
+from models import InsightCache, PriceCache, User, WatchlistBriefing, db, utcnow
 
 load_dotenv()
 
@@ -48,97 +50,43 @@ def index():
     return render_template("index.html")
 
 
-def _compute_portfolio(user):
-    holdings = storage.list_holdings(user)
-    result = []
-    total_value = 0.0
-    total_cost = 0.0
-
-    for h in holdings:
-        price = _get_price(h["symbol"])
-        value = price * h["shares"] if price is not None else None
-        cost = h["cost_basis"] * h["shares"]
-        gain = (value - cost) if value is not None else None
-
-        if value is not None:
-            total_value += value
-        total_cost += cost
-
-        result.append(
-            {
-                **h,
-                "price": price,
-                "value": value,
-                "gain": gain,
-                "gain_pct": (gain / cost * 100) if gain is not None and cost else None,
-            }
-        )
-
-    # Now that we know the total, go back and add each holding's % of the whole.
-    for h in result:
-        h["weight_pct"] = (h["value"] / total_value * 100) if h["value"] and total_value else None
-
-    return {
-        "holdings": result,
-        "total_value": total_value,
-        "total_cost": total_cost,
-        "total_gain": total_value - total_cost,
-    }
-
-
-@app.route("/api/portfolio")
+@app.route("/api/watchlist")
 @login_required
-def get_portfolio():
-    return jsonify(_compute_portfolio(current_user))
+def get_watchlist():
+    items = storage.list_watchlist(current_user)
+    for item in items:
+        item["price"] = _get_price(item["symbol"])
+    return jsonify({"watchlist": items})
 
 
-def _invalidate_portfolio_insight(user):
-    """Your holdings changed, so any cached whole-portfolio briefing is now
-    describing a portfolio that no longer exists — clear it."""
-    cached = db.session.get(PortfolioInsight, user.id)
+def _invalidate_watchlist_briefing(user):
+    """The watchlist changed, so any cached briefing is now describing a
+    list that no longer exists — clear it."""
+    cached = db.session.get(WatchlistBriefing, user.id)
     if cached is not None:
         db.session.delete(cached)
         db.session.commit()
 
 
-@app.route("/api/holdings", methods=["POST"])
+@app.route("/api/watchlist", methods=["POST"])
 @login_required
-def add_holding():
+def add_to_watchlist():
     data = request.get_json()
     symbol = data.get("symbol", "")
-    shares = data.get("shares")
-    cost_basis = data.get("cost_basis")
 
-    if not symbol or shares is None or cost_basis is None:
-        return jsonify({"error": "symbol, shares, and cost_basis are required"}), 400
+    if not symbol:
+        return jsonify({"error": "symbol is required"}), 400
 
-    holding = storage.add_holding(current_user, symbol, shares, cost_basis)
-    _invalidate_portfolio_insight(current_user)
-    return jsonify(holding), 201
+    item = storage.add_to_watchlist(current_user, symbol)
+    _invalidate_watchlist_briefing(current_user)
+    return jsonify(item), 201
 
 
-@app.route("/api/holdings/<int:holding_id>", methods=["PUT"])
+@app.route("/api/watchlist/<int:item_id>", methods=["DELETE"])
 @login_required
-def update_holding(holding_id):
-    data = request.get_json()
-    shares = data.get("shares")
-    cost_basis = data.get("cost_basis")
-
-    if shares is None or cost_basis is None:
-        return jsonify({"error": "shares and cost_basis are required"}), 400
-
-    holding = storage.update_holding(current_user, holding_id, shares, cost_basis)
-    if holding is None:
-        return jsonify({"error": "not found"}), 404
-    _invalidate_portfolio_insight(current_user)
-    return jsonify(holding)
-
-
-@app.route("/api/holdings/<int:holding_id>", methods=["DELETE"])
-@login_required
-def delete_holding(holding_id):
-    storage.delete_holding(current_user, holding_id)
-    _invalidate_portfolio_insight(current_user)
+def remove_from_watchlist(item_id):
+    storage.remove_from_watchlist(current_user, item_id)
+    _invalidate_watchlist_briefing(current_user)
     return "", 204
 
 
@@ -166,29 +114,24 @@ def get_insight(symbol):
     return jsonify(result)
 
 
-@app.route("/api/portfolio-insight")
+@app.route("/api/watchlist-briefing")
 @login_required
-def get_portfolio_insight():
-    cached = db.session.get(PortfolioInsight, current_user.id)
+def get_watchlist_briefing():
+    cached = db.session.get(WatchlistBriefing, current_user.id)
     if cached is not None and cached.is_fresh():
         return jsonify(
             {"available": True, "summary": cached.summary, "sources": json.loads(cached.sources_json)}
         )
 
-    portfolio = _compute_portfolio(current_user)
-    holdings_with_weight = [
-        {"symbol": h["symbol"], "weight_pct": h["weight_pct"]}
-        for h in portfolio["holdings"]
-        if h["weight_pct"] is not None
-    ]
+    symbols = [item["symbol"] for item in storage.list_watchlist(current_user)]
 
-    if not holdings_with_weight:
-        return jsonify({"available": False, "summary": "Add a holding first to get a portfolio briefing."})
+    if not symbols:
+        return jsonify({"available": False, "summary": "Add a company first to get a briefing."})
 
-    result = insights.get_portfolio_briefing(holdings_with_weight)
+    result = insights.get_watchlist_briefing(symbols)
 
     if result["available"]:
-        cached = cached or PortfolioInsight(user_id=current_user.id)
+        cached = cached or WatchlistBriefing(user_id=current_user.id)
         cached.summary = result["summary"]
         cached.sources_json = json.dumps(result.get("sources", []))
         cached.fetched_at = utcnow()

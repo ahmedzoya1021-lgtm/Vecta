@@ -9,7 +9,7 @@
   <header class="app-header">
     <div>
       <h1>Vecta</h1>
-      <p class="subtitle">Your portfolio, with geopolitical context.</p>
+      <p class="subtitle">Geopolitical context for the companies you're watching.</p>
     </div>
     <div class="account">
       <span>{{ current_user.email }}</span>
@@ -18,45 +18,28 @@
   </header>
 
   <main>
-    <section class="summary" id="summary">
-      <div class="stat">
-        <span class="label">Total Value</span>
-        <span class="value" id="total-value">$0.00</span>
-      </div>
-      <div class="stat">
-        <span class="label">Total Gain/Loss</span>
-        <span class="value" id="total-gain">$0.00</span>
-      </div>
-    </section>
-
     <section class="briefing">
-      <h2>Portfolio Briefing</h2>
-      <p class="briefing-hint">How geopolitical events might relate to your specific mix of holdings — not investment advice.</p>
+      <h2>Watchlist Briefing</h2>
+      <p class="briefing-hint">How geopolitical events might relate to your specific list of companies — not investment advice.</p>
       <button id="briefing-btn">Get briefing</button>
       <div id="briefing-result"></div>
     </section>
 
     <section class="add-holding">
-      <h2>Add a holding</h2>
+      <h2>Watch a company</h2>
       <form id="add-form">
         <input type="text" id="symbol" placeholder="Ticker (e.g. AAPL)" required>
-        <input type="number" id="shares" placeholder="Shares" step="any" required>
-        <input type="number" id="cost_basis" placeholder="Price paid per share" step="any" required>
         <button type="submit">Add</button>
       </form>
     </section>
 
     <section class="holdings">
-      <h2>Your Holdings</h2>
+      <h2>Your Watchlist</h2>
       <table id="holdings-table">
         <thead>
           <tr>
             <th>Symbol</th>
-            <th>Shares</th>
-            <th>Cost Basis</th>
             <th>Price</th>
-            <th>Value</th>
-            <th>Gain/Loss</th>
             <th></th>
           </tr>
         </thead>

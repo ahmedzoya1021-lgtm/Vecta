@@ -27,8 +27,8 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=utcnow)
 
-    holdings = db.relationship(
-        "Holding", backref="owner", cascade="all, delete-orphan"
+    watchlist = db.relationship(
+        "WatchlistItem", backref="owner", cascade="all, delete-orphan"
     )
 
     def set_password(self, password):
@@ -38,20 +38,16 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 
-class Holding(db.Model):
+class WatchlistItem(db.Model):
+    """A company a user wants geopolitical context on — no shares, no cost
+    basis. Vecta isn't tracking money here, just watching a company."""
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     symbol = db.Column(db.String(20), nullable=False)
-    shares = db.Column(db.Float, nullable=False)
-    cost_basis = db.Column(db.Float, nullable=False)
 
     def to_dict(self):
-        return {
-            "id": self.id,
-            "symbol": self.symbol,
-            "shares": self.shares,
-            "cost_basis": self.cost_basis,
-        }
+        return {"id": self.id, "symbol": self.symbol}
 
 
 class InsightCache(db.Model):
@@ -67,12 +63,12 @@ class InsightCache(db.Model):
         return utcnow() - self.fetched_at < INSIGHT_CACHE_TTL
 
 
-class PortfolioInsight(db.Model):
-    """Stores the last whole-portfolio AI briefing for a user. Unlike
+class WatchlistBriefing(db.Model):
+    """Stores the last whole-watchlist AI briefing for a user. Unlike
     InsightCache (shared across everyone, keyed by symbol), this is unique
-    per user since it depends on their specific mix of holdings. We clear a
-    user's row whenever their holdings change, so it's never stale-wrong —
-    the time-based freshness check below is just a backup limit."""
+    per user since it depends on their specific list of companies. We clear
+    a user's row whenever their watchlist changes, so it's never
+    stale-wrong — the time-based freshness check below is just a backup limit."""
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
     summary = db.Column(db.Text, nullable=False)

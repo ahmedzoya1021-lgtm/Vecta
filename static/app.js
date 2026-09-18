@@ -2,79 +2,52 @@
 // /api/... URLs defined in app.py, and updates the page with the results.
 
 const tableBody = document.getElementById("holdings-body");
-const totalValueEl = document.getElementById("total-value");
-const totalGainEl = document.getElementById("total-gain");
 const form = document.getElementById("add-form");
 const briefingBtn = document.getElementById("briefing-btn");
 const briefingResult = document.getElementById("briefing-result");
-
-let lastData = null;
 
 function money(n) {
   if (n === null || n === undefined) return "—";
   return n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
-function renderRow(h) {
+function renderRow(item) {
   const row = document.createElement("tr");
-  row.dataset.id = h.id;
+  row.dataset.id = item.id;
   row.innerHTML = `
-    <td>${h.symbol}</td>
-    <td class="cell-shares">${h.shares}</td>
-    <td class="cell-cost">${money(h.cost_basis)}</td>
-    <td>${money(h.price)}</td>
-    <td>${money(h.value)}</td>
-    <td class="${h.gain >= 0 ? "positive" : "negative"}">${money(h.gain)}</td>
+    <td>${item.symbol}</td>
+    <td>${money(item.price)}</td>
     <td class="row-actions">
-      <button class="insight-toggle" data-symbol="${h.symbol}">AI context</button>
-      <button class="edit-btn" data-id="${h.id}">Edit</button>
-      <button class="delete-btn" data-id="${h.id}">Remove</button>
+      <button class="insight-toggle" data-symbol="${item.symbol}">AI context</button>
+      <button class="delete-btn" data-id="${item.id}">Remove</button>
     </td>
   `;
   return row;
 }
 
-async function loadPortfolio() {
-  const res = await fetch("/api/portfolio");
+async function loadWatchlist() {
+  const res = await fetch("/api/watchlist");
   const data = await res.json();
-  lastData = data;
-
-  totalValueEl.textContent = money(data.total_value);
-  totalGainEl.textContent = money(data.total_gain);
-  totalGainEl.className = "value " + (data.total_gain >= 0 ? "positive" : "negative");
 
   tableBody.innerHTML = "";
-  for (const h of data.holdings) {
-    tableBody.appendChild(renderRow(h));
+  for (const item of data.watchlist) {
+    tableBody.appendChild(renderRow(item));
   }
 }
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const symbol = document.getElementById("symbol").value;
-  const shares = document.getElementById("shares").value;
-  const cost_basis = document.getElementById("cost_basis").value;
 
-  await fetch("/api/holdings", {
+  await fetch("/api/watchlist", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ symbol, shares, cost_basis }),
+    body: JSON.stringify({ symbol }),
   });
 
   form.reset();
-  loadPortfolio();
+  loadWatchlist();
 });
-
-function enterEditMode(row, holding) {
-  row.querySelector(".cell-shares").innerHTML =
-    `<input class="edit-input" type="number" step="any" value="${holding.shares}" data-field="shares">`;
-  row.querySelector(".cell-cost").innerHTML =
-    `<input class="edit-input" type="number" step="any" value="${holding.cost_basis}" data-field="cost_basis">`;
-  row.querySelector(".row-actions").innerHTML = `
-    <button class="save-btn" data-id="${holding.id}">Save</button>
-    <button class="cancel-btn" data-id="${holding.id}">Cancel</button>
-  `;
-}
 
 tableBody.addEventListener("click", async (e) => {
   const target = e.target;
@@ -83,32 +56,9 @@ tableBody.addEventListener("click", async (e) => {
 
   if (target.classList.contains("delete-btn")) {
     const symbol = row.querySelector("td").textContent;
-    if (!confirm(`Remove ${symbol} from your portfolio?`)) return;
-    await fetch(`/api/holdings/${id}`, { method: "DELETE" });
-    loadPortfolio();
-    return;
-  }
-
-  if (target.classList.contains("edit-btn")) {
-    const holding = lastData.holdings.find((h) => String(h.id) === id);
-    enterEditMode(row, holding);
-    return;
-  }
-
-  if (target.classList.contains("cancel-btn")) {
-    loadPortfolio();
-    return;
-  }
-
-  if (target.classList.contains("save-btn")) {
-    const shares = row.querySelector('[data-field="shares"]').value;
-    const cost_basis = row.querySelector('[data-field="cost_basis"]').value;
-    await fetch(`/api/holdings/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ shares, cost_basis }),
-    });
-    loadPortfolio();
+    if (!confirm(`Remove ${symbol} from your watchlist?`)) return;
+    await fetch(`/api/watchlist/${id}`, { method: "DELETE" });
+    loadWatchlist();
     return;
   }
 
@@ -136,7 +86,7 @@ tableBody.addEventListener("click", async (e) => {
     const insightRow = document.createElement("tr");
     insightRow.className = "insight-row";
     insightRow.innerHTML = `
-      <td colspan="7">
+      <td colspan="3">
         ${data.summary}
         ${sourcesHtml ? `<div class="sources">Sources: ${sourcesHtml}</div>` : ""}
       </td>
@@ -150,7 +100,7 @@ briefingBtn.addEventListener("click", async () => {
   briefingBtn.innerHTML = `<span class="spinner"></span>`;
   briefingResult.textContent = "";
 
-  const res = await fetch("/api/portfolio-insight");
+  const res = await fetch("/api/watchlist-briefing");
   const data = await res.json();
 
   briefingBtn.disabled = false;
@@ -166,4 +116,4 @@ briefingBtn.addEventListener("click", async () => {
   `;
 });
 
-loadPortfolio();
+loadWatchlist();
